@@ -1,0 +1,27 @@
+       >>SOURCE FORMAT FIXED
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. CH01A02.
+      *AUTHOR. MANUEL MARTINEZ.
+      *DATE-WRITTEN. 2024-06-01.
+      *DATE-COMPILED. 2024-06-01.
+       
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01  SALES-AMOUNT           PIC 999V99.
+       01  SALES-TAX              PIC 99V99.
+       01  MORE-DATA              PIC XXX VALUE "YES".
+              
+       PROCEDURE DIVISION.
+       100-MAIN.
+           PERFORM UNTIL MORE-DATA = "NO"
+             DISPLAY 'ENTER SALES AMOUNT : '
+             ACCEPT SALES-AMOUNT
+             COMPUTE SALES-TAX = SALES-AMOUNT * 0.08
+             DISPLAY 'SALES TAX AMOUNT: ', SALES-TAX
+             DISPLAY "IS THERE MORE INPUT (YES OR NO)?"
+             ACCEPT MORE-DATA
+             INSPECT MORE-DATA CONVERTING "yneso" TO "YNESO"
+             DISPLAY "MORE-DATA: ", MORE-DATA
+           END-PERFORM
+           STOP RUN
+           .
