@@ -1,0 +1,42 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+	{
+		"label": "Build (current COBOL folder, exe = filename)",
+		"type": "shell",
+		"command": "/usr/local/bin/cobc",
+		"args": [
+			"-x",
+			"-g",
+			"-O0",
+			"-Wall",
+			"-o",
+			"${fileDirname}/${fileBasenameNoExtension}",
+			"${file}"
+		],
+		"options": {
+			"cwd": "${fileDirname}"
+		},
+		"problemMatcher": [
+			"$gnucobol",
+			"$gnucobol-warning",
+			"$gnucobol-error",
+			"$gnucobol-note"
+		],
+		"group": "build"
+	},
+	{
+		"label": "Run (external terminal, current COBOL exe)",
+		"type": "shell",
+		"command": "gnome-terminal",
+		"args": [
+			"--",
+			"bash",
+			"-lc",
+			"cd '${fileDirname}' && './${fileBasenameNoExtension}'; echo; echo 'Press Enter to close...'; read"
+		],
+		"dependsOn": "Build (current COBOL folder, exe = filename)",
+		"problemMatcher": []
+	}
+]
+}

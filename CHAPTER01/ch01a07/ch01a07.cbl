@@ -24,6 +24,7 @@
        001-MAIN.
            DISPLAY 'Enter Speed in Knots: '
            ACCEPT KNOTS-IN
+      *     MOVE 100 TO KNOTS-IN
            COMPUTE MILES-OUT = KNOTS-IN * 1.15
            DISPLAY 'Speed in Miles per Hour: ' MILES-OUT
            STOP RUN

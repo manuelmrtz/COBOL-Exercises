@@ -1,0 +1,46 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+          "name": "SuperBOL debugger",
+          "type": "superbol-gdb",
+          "request": "launch",
+          "target": "${file}",
+          "cwd": "${fileDirname}",
+          "coverage": true,
+          "verbose": true,
+          "preLaunchTask": "Build (current COBOL folder, exe = filename)",
+        },
+        
+        {
+            "name": "SuperBOL: debug (attach local)",
+            "type": "superbol-gdb",
+            "request": "attach",
+            "pid": "${input:pid}",
+            "target": "${file}"
+        },
+        {
+            "name": "SuperBOL: debug (attach remote)",
+            "type": "superbol-gdb",
+            "request": "attach",
+            "remoteDebugger": "${input:remoteDebugger}",
+            "target": "${file}"
+        }
+    ],
+  "inputs": [
+    {
+      "id": "pid",
+      "type": "promptString",
+      "description": "Enter PID to attach to"
+    },
+    {
+      "id": "remoteDebugger",
+      "type": "promptString",
+      "description": "Enter remote debugger (e.g. host:port)"
+    }
+  ]
+}
