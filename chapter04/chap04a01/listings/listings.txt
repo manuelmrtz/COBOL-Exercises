@@ -1,0 +1,311 @@
+GnuCOBOL 3.2.0          chap04a01.cbl        Tue Mar 03 2026 20:13:43  Page 0001
+
+LINE    PG/LN  A...B............................................................
+
+000001         IDENTIFICATION DIVISION.
+000002         PROGRAM-ID.  CHAP04A01.
+000003        *AUTHOR.      Manuel A. Martinez.
+000004        *DATE-WRITTEN. 2026-03-02.
+000005        *DATE-COMPILED.
+000006        *INSTALLATION. Manuel Martinez Development Lab.
+000007        *SECURITY.     Internal / Confidential / Public.
+000008        *ENVIRONMENT.  Linux ARM64 GnuCOBOL 3_2.
+000009
+000010        *****************************************************************
+000011        * PROGRAM NAME : CHAP04A01                                      *
+000012        *                                                               *
+000013        * PROGRAM TYPE : Batch                                          *
+000014        *                                                               *
+000015        * DESCRIPTION :                                                 *
+000016        *    The chain Video Trap: Movies for Less needs to create two  *
+000017        *    mailing list for each customer record on file. One mailing *
+000018        *    list will be for video rentals and the other for video     *
+000019        *    sales.                                                     *
+000020        *        a. Print two mailing labels per individual, stacked on *
+000021        *           top of the other.                                   *
+000022        *        b. Now asume that the printer contains perforated      *
+000023        *           stick-on labels that can be printed side by side.   *
+000024        *                                                               *
+000025        * BUSINESS PURPOSE :                                            *
+000026        *   Educational                                                 *
+000027        *                                                               *
+000028        * INPUT :                                                       *
+000029        *    F-CUSTOMER-FILE = data/customer.dat                        *
+000030        *                                                               *
+000031        * OUTPUT :                                                      *
+000032        *    F-VLABELS-FILE  = data/vlabels.prt                         *
+000033        *    F-HLABELS-FILE  = data/hlabels.prt                         *
+000034        *                                                               *
+000035        * ERROR HANDLING STRATEGY :                                     *
+000036        *   - File status validated after each I/O                      *
+000037        *                                                               *
+000038        * RETURN CODES :                                                *
+000039        *   NONE                                                        *
+000040        *                                                               *
+000041        * SPECIAL NOTES :                                               *
+000042        *   NONE                                                        *
+000043        *                                                               *
+000044        * REVISION HISTORY :                                            *
+000045        *   2026-03-02  MAM  Initial version                            *
+000046        *   YYYY-MM-DD  MAM  Description of change                      *
+000047        *                                                               *
+000048        *****************************************************************
+000049
+000050         ENVIRONMENT DIVISION.
+000051         INPUT-OUTPUT SECTION.
+000052         FILE-CONTROL.
+GnuCOBOL 3.2.0          chap04a01.cbl        Tue Mar 03 2026 20:13:43  Page 0002
+
+LINE    PG/LN  A...B............................................................
+
+000053
+000054             SELECT F-CUSTOMER-FILE ASSIGN TO "data/customer.dat"
+000055                 ORGANIZATION IS LINE SEQUENTIAL
+000056                 FILE STATUS IS WS-CUSTOMER-STATUS.
+000057
+000058        *****************************************************************
+000059        *     VLABELS - VERTICAL LABELS, THIS FORMAT WILL PRINT ONE     *
+000060        *               ON TOP OF THE OTHER.                            *
+000061        *                                                               *
+000062        *     HLABELS - HORIZONTAL LABELS, THIS FORMAT WILL PRINT SIDE  *
+000063        *               BY SIDE.                                        *
+000064        *****************************************************************
+000065
+000066             SELECT F-VLABELS-FILE ASSIGN TO "data/vlabels.prt"
+000067                 ORGANIZATION IS LINE SEQUENTIAL
+000068                  FILE STATUS IS WS-VLABELS-STATUS.
+000069
+000070             SELECT F-HLABELS-FILE ASSIGN TO "data/hlabels.prt"
+000071                 ORGANIZATION IS LINE SEQUENTIAL
+000072                 FILE STATUS IS WS-HLABELS-STATUS.
+000073
+000074         DATA DIVISION.
+000075         FILE SECTION.
+000076         FD  F-CUSTOMER-FILE.
+000077         01  CUSTOMER-REC.
+000078             05 CUSTOMER-NAME-IN PIC X(20).
+000079             05 STREET-ADDR-IN   PIC X(20).
+000080             05 CITY-ADDR-IN     PIC X(10).
+000081             05 STATE-ADDR-IN    PIC X(3).
+000082             05 ZIP-CODE-ADDR-IN PIC X(5).
+000083
+000084         FD  F-VLABELS-FILE.
+000085         01  VLABELS-REC.
+000086             05 ADDRESS-LINE-01 PIC X(20).
+000087
+000088         FD  F-HLABELS-FILE.
+000089         01  HLABELS-REC.
+000090             05 ADDRESS-LINE-02A PIC X(20).
+000091             05 DUMMY            PIC X(15).
+000092             05 ADDRESS-LINE-02B PIC X(20).
+000093
+000094         WORKING-STORAGE SECTION.
+000095         01  WS-EOF              PIC X      VALUE 'N'.
+000096         01  WS-CUSTOMER-STATUS    PIC XX.
+000097         01  WS-VLABELS-STATUS     PIC XX.
+000098         01  WS-HLABELS-STATUS     PIC XX.
+000099
+000100         PROCEDURE DIVISION.
+000101         100-MAIN-MODULE.
+000102        *    VERTICAL LABELS ROUTINE
+000103             PERFORM 200-OPEN-FILES
+000104             MOVE 'N' TO WS-EOF
+GnuCOBOL 3.2.0          chap04a01.cbl        Tue Mar 03 2026 20:13:43  Page 0003
+
+LINE    PG/LN  A...B............................................................
+
+000105             PERFORM UNTIL WS-EOF = 'Y'
+000106                 READ F-CUSTOMER-FILE
+000107                     AT END
+000108                         MOVE 'Y' TO WS-EOF
+000109                     NOT AT END
+000110                         PERFORM 400-PROCESS-VLABEL-RTN
+000111                         PERFORM 500-PROCESS-HLABEL-RTN
+000112                 END-READ
+000113
+000114        *    Check for read errors (excluding normal end-of-file)
+000115                 IF WS-CUSTOMER-STATUS NOT = '00' AND
+000116                    WS-CUSTOMER-STATUS NOT = '10'
+000117                     DISPLAY 'ERROR: Reading CUSTOMER file. Status: '
+000118                             WS-CUSTOMER-STATUS
+000119                     PERFORM 300-CLOSE-FILES
+000120                     STOP RUN
+000121                 END-IF
+000122
+000123             END-PERFORM
+000124             PERFORM 300-CLOSE-FILES
+000125
+000126
+000127
+000128             STOP RUN
+000129             .
+000130
+000131         200-OPEN-FILES.
+000132             OPEN INPUT  F-CUSTOMER-FILE
+000133                  OUTPUT F-VLABELS-FILE
+000134                  OUTPUT F-HLABELS-FILE
+000135
+000136             IF WS-CUSTOMER-STATUS NOT = '00'
+000137                 DISPLAY 'ERROR: Cannot open CUSTOMER file. Status: '
+000138                     WS-CUSTOMER-STATUS
+000139                 STOP RUN
+000140             END-IF
+000141
+000142             IF WS-VLABELS-STATUS NOT = '00'
+000143                 DISPLAY 'ERROR: Cannot open VLABELS file. Status: '
+000144                         WS-VLABELS-STATUS
+000145                 STOP RUN
+000146             END-IF
+000147
+000148             IF WS-HLABELS-STATUS NOT = '00'
+000149                 DISPLAY 'ERROR: Cannot open HLABELS file. Status: '
+000150                         WS-HLABELS-STATUS
+000151                 STOP RUN
+000152             END-IF
+000153             .
+000154         300-CLOSE-FILES.
+000155             CLOSE F-CUSTOMER-FILE
+000156                   F-VLABELS-FILE
+GnuCOBOL 3.2.0          chap04a01.cbl        Tue Mar 03 2026 20:13:43  Page 0004
+
+LINE    PG/LN  A...B............................................................
+
+000157                   F-HLABELS-FILE
+000158
+000159             IF WS-CUSTOMER-STATUS NOT = '00'
+000160                 DISPLAY 'WARNING: Error closing CUSTOMER file. Status: '
+000161                         WS-CUSTOMER-STATUS
+000162             END-IF
+000163
+000164             IF WS-VLABELS-STATUS NOT = '00'
+000165                 DISPLAY 'WARNING: Error closing VLABELS file. Status: '
+000166                         WS-VLABELS-STATUS
+000167             END-IF
+000168
+000169             IF WS-HLABELS-STATUS NOT = '00'
+000170                 DISPLAY 'WARNING: Error closing HLABELS file. Status: '
+000171                         WS-HLABELS-STATUS
+000172             END-IF
+000173             .
+000174
+000175         400-PROCESS-VLABEL-RTN.
+000176             PERFORM 2 TIMES
+000177                 MOVE SPACES TO ADDRESS-LINE-01
+000178                 MOVE ALL '-' TO ADDRESS-LINE-01
+000179                 PERFORM 410-WRITE-VLABELS
+000180
+000181                 MOVE SPACES TO ADDRESS-LINE-01
+000182                 MOVE CUSTOMER-NAME-IN TO ADDRESS-LINE-01
+000183                 PERFORM 410-WRITE-VLABELS
+000184
+000185                 MOVE SPACES TO ADDRESS-LINE-01
+000186                 MOVE STREET-ADDR-IN   TO ADDRESS-LINE-01
+000187                 PERFORM 410-WRITE-VLABELS
+000188
+000189                 MOVE SPACES TO ADDRESS-LINE-01
+000190                 STRING FUNCTION TRIM(CITY-ADDR-IN) ", "
+000191                        FUNCTION TRIM(STATE-ADDR-IN) " "
+000192                        FUNCTION TRIM(ZIP-CODE-ADDR-IN)
+000193                        DELIMITED BY SIZE
+000194                        INTO ADDRESS-LINE-01
+000195                 END-STRING
+000196                 PERFORM 410-WRITE-VLABELS
+000197             END-PERFORM
+000198             .
+000199
+000200         410-WRITE-VLABELS.
+000201             WRITE VLABELS-REC
+000202             IF WS-VLABELS-STATUS NOT = '00'
+000203                 DISPLAY 'ERROR: Writing to VLABELS file. Status: '
+000204                         WS-VLABELS-STATUS
+000205                 PERFORM 300-CLOSE-FILES
+000206                 STOP RUN
+000207             END-IF
+000208             .
+GnuCOBOL 3.2.0          chap04a01.cbl        Tue Mar 03 2026 20:13:43  Page 0005
+
+LINE    PG/LN  A...B............................................................
+
+000209
+000210         500-PROCESS-HLABEL-RTN.
+000211             MOVE SPACES TO HLABELS-REC
+000212             MOVE ALL '-' TO HLABELS-REC
+000213             PERFORM 510-WRITE-HLABELS
+000214
+000215             MOVE SPACES TO HLABELS-REC
+000216             MOVE CUSTOMER-NAME-IN TO ADDRESS-LINE-02A
+000217             MOVE CUSTOMER-NAME-IN TO ADDRESS-LINE-02B
+000218             PERFORM 510-WRITE-HLABELS
+000219
+000220             MOVE SPACES TO HLABELS-REC
+000221             MOVE STREET-ADDR-IN   TO ADDRESS-LINE-02A
+000222             MOVE STREET-ADDR-IN   TO ADDRESS-LINE-02B
+000223             PERFORM 510-WRITE-HLABELS
+000224
+000225             MOVE SPACES TO HLABELS-REC
+000226             STRING FUNCTION TRIM(CITY-ADDR-IN) ", "
+000227                    FUNCTION TRIM(STATE-ADDR-IN) " "
+000228                    FUNCTION TRIM(ZIP-CODE-ADDR-IN)
+000229                    DELIMITED BY SIZE
+000230                    INTO ADDRESS-LINE-02A
+000231             END-STRING
+000232             MOVE ADDRESS-LINE-02A TO ADDRESS-LINE-02B
+000233             PERFORM 510-WRITE-HLABELS
+000234             .
+000235         510-WRITE-HLABELS.
+000236             WRITE HLABELS-REC
+000237             IF WS-HLABELS-STATUS NOT = '00'
+000238                 DISPLAY 'ERROR: Writing to HLABELS file. Status: '
+000239                         WS-HLABELS-STATUS
+000240                 PERFORM 300-CLOSE-FILES
+000241                 STOP RUN
+000242             END-IF
+000243             .
+000244
+GnuCOBOL 3.2.0          chap04a01.cbl        Tue Mar 03 2026 20:13:43  Page 0006
+
+NAME                           DEFINED                REFERENCES
+
+F-CUSTOMER-FILE                54       76      106     132     155    x4
+CUSTOMER-REC                   77     referenced by child
+CUSTOMER-NAME-IN               78       182     216     217            x3
+STREET-ADDR-IN                 79       186     221     222            x3
+CITY-ADDR-IN                   80       190     226                    x2
+STATE-ADDR-IN                  81       191     227                    x2
+ZIP-CODE-ADDR-IN               82       192     228                    x2
+
+F-VLABELS-FILE                 66       84     *133     156    *201    x4
+VLABELS-REC                    85       201                            x1
+ADDRESS-LINE-01                86      *177    *178    *181    *182    *185
+                                       *186    *189     194            x8
+
+F-HLABELS-FILE                 70       88     *134     157    *236    x4
+HLABELS-REC                    89      *211    *212    *215    *220    *225
+                                        236                            x6
+ADDRESS-LINE-02A               90      *216    *221     230     232    x4
+DUMMY                          91     referenced by parent
+ADDRESS-LINE-02B               92      *217    *222    *232            x3
+
+WS-EOF                         95      *104     105    *108            x3
+WS-CUSTOMER-STATUS             96       56      115     116     118     136
+                                        138     159     161            x8
+WS-VLABELS-STATUS              97       68      142     144     164     166
+                                        202     204                    x7
+WS-HLABELS-STATUS              98       72      148     150     169     171
+                                        237     239                    x7
+
+GnuCOBOL 3.2.0          chap04a01.cbl        Tue Mar 03 2026 20:13:43  Page 0007
+
+LABEL                          DEFINED                REFERENCES
+
+E CHAP04A01                    101
+P 100-MAIN-MODULE              101    not referenced
+P 200-OPEN-FILES               131      103                            x1
+P 300-CLOSE-FILES              154      119     124     205     240    x4
+P 400-PROCESS-VLABEL-RTN       175      110                            x1
+P 410-WRITE-VLABELS            200      179     183     187     196    x4
+P 500-PROCESS-HLABEL-RTN       210      111                            x1
+P 510-WRITE-HLABELS            235      213     218     223     233    x4
+
+0 warnings in compilation group
+0 errors in compilation group
