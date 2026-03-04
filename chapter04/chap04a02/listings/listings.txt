@@ -1,0 +1,254 @@
+GnuCOBOL 3.2.0          chap04a02.cbl        Wed Mar 04 2026 00:09:17  Page 0001
+
+LINE    PG/LN  A...B............................................................
+
+000001         IDENTIFICATION DIVISION.
+000002         PROGRAM-ID.  CHAP04A02.
+000003
+000004        *****************************************************************
+000005        * PROGRAM NAME : Assignment 02 FROM CHAPTER 04                  *
+000006        * PROGRAM ID   : CHAP04A02                                      *
+000007        *                                                               *
+000008        * AUTHOR       : Manuel A. Martinez                             *
+000009        * DATE WRITTEN : 2026-03-03                                     *
+000010        * DATE COMPILED:                                                *
+000011        *                                                               *
+000012        * INSTALLATION : Manuel Martinez Development Lab                *
+000013        * ENVIRONMENT  : Linux ARM64 GnuCOBOL 3.2                       *
+000014        *                                                               *
+000015        * PROGRAM TYPE : Batch                                          *
+000016        *                                                               *
+000017        *===============================================================*
+000018        *                                                               *
+000019        * DESCRIPTION :                                                 *
+000020        *   WRITE A POGRAM TO PRINT ALL INFORMATION FROM PAYROLL        *
+000021        *   RECORDS FOR EMPLOYEES OF THE INTERNATIONAL CHERRY MACHINE   *
+000022        *   COMPANY (ICM). THE PROBLEM DEFINITION IS SHOWN IN FIGURE    *
+000023        *   4.6.                                                        *
+000024        *                                                               *
+000025        *===============================================================*
+000026        *                                                               *
+000027        * BUSINESS PURPOSE :                                            *
+000028        *   Educational                                                 *
+000029        *                                                               *
+000030        *===============================================================*
+000031        *                                                               *
+000032        * INPUT FILES :                                                 *
+000033        *   -------------------- -------------------------------------- *
+000034        *   | File Name       | Description                           | *
+000035        *   -------------------- -------------------------------------- *
+000036        *   | prmaster.dat    | Payroll Master Data                   | *
+000037        *   -------------------- -------------------------------------- *
+000038        *                                                               *
+000039        * OUTPUT FILES :                                                *
+000040        *   -------------------- -------------------------------------- *
+000041        *   | File Name       | Description                           | *
+000042        *   -------------------- -------------------------------------- *
+000043        *   | prlist.prt      | Payroll List                          | *
+000044        *   -------------------- -------------------------------------- *
+000045        *                                                               *
+000046        *===============================================================*
+000047        *                                                               *
+000048        * ERROR HANDLING :                                              *
+000049        *   - File status validated after every I/O operation           *
+000050        *                                                               *
+000051        *===============================================================*
+000052        *                                                               *
+GnuCOBOL 3.2.0          chap04a02.cbl        Wed Mar 04 2026 00:09:17  Page 0002
+
+LINE    PG/LN  A...B............................................................
+
+000053        * SPECIAL NOTES :                                               *
+000054        *   [Any special considerations, dependencies, or notes]        *
+000055        *                                                               *
+000056        *===============================================================*
+000057        *                                                               *
+000058        * REVISION HISTORY :                                            *
+000059        *   2026-03-03  MAM  Initial version                            *
+000060        *   YYYY-MM-DD  MAM  [Description of change]                    *
+000061        *                                                               *
+000062        *****************************************************************
+000063         ENVIRONMENT DIVISION.
+000064         INPUT-OUTPUT SECTION.
+000065         FILE-CONTROL.
+000066             SELECT F-PR-MASTER ASSIGN TO "data/prmast.dat"
+000067                 ORGANIZATION IS LINE SEQUENTIAL
+000068                 FILE STATUS WS-MASTER-STATUS.
+000069
+000070             SELECT F-PR-LIST ASSIGN TO "data/prlist.prt"
+000071                 ORGANIZATION IS LINE SEQUENTIAL
+000072                 FILE STATUS WS-LIST-STATUS.
+000073
+000074         DATA DIVISION.
+000075         FILE SECTION.
+000076         FD  F-PR-MASTER.
+000077         01  MASTER-REC.
+000078             05 EMPLOYEE-NO-IN         PIC X(5).
+000079             05 EMPLOYEE-NAME-IN       PIC X(20).
+000080             05 LOCATION-CODE-IN.
+000081                 10 TERRITORY-IN       PIC X(2).
+000082                 10 OFFICE-NO-IN       PIC X(2).
+000083             05 ANNUAL-SALARY-IN       PIC X(6).
+000084             05 SOCIAL-SECURITY-NO-IN  PIC X(9).
+000085             05 NO-OF-DEPENDENTS-IN    PIC X(2).
+000086             05 JOB-CLASSIFICATION-IN  PIC X(2).
+000087
+000088         FD  F-PR-LIST.
+000089         01  REPORT-HEADER-LINE.
+000090             05 HEADER-TEXT            PIC X(80).
+000091
+000092         01  REPORT-DETAIL.
+000093             05 FILLER                 PIC X(5).
+000094             05 EMPLOYEE-NO-OUT        PIC X(5).
+000095             05 FILLER                 PIC X(2).
+000096             05 EMPLOYEE-NAME-OUT      PIC X(20).
+000097             05 FILLER                 PIC X(1).
+000098             05 LOCATION-CODE-OUT.
+000099                 10 TERRITORY-OUT      PIC X(2).
+000100                 10 FILLER             PIC X(3).
+000101                 10 OFFICE-NO-OUT      PIC X(2).
+000102             05 FILLER                 PIC X(2).
+000103             05 ANNUAL-SALARY-OUT      PIC X(6).
+000104             05 FILLER                 PIC X(2).
+GnuCOBOL 3.2.0          chap04a02.cbl        Wed Mar 04 2026 00:09:17  Page 0003
+
+LINE    PG/LN  A...B............................................................
+
+000105             05 SOCIAL-SECURITY-NO-OUT PIC X(9).
+000106             05 FILLER                 PIC X(2).
+000107             05 NO-OF-DEPENDENTS-OUT   PIC X(2).
+000108             05 FILLER                 PIC X(2).
+000109             05 JOB-CLASSIFICATION-OUT PIC X(2).
+000110             05 FILLER                 PIC X(39).
+000111
+000112         WORKING-STORAGE SECTION.
+000113         01  WS-MASTER-STATUS          PIC XX.
+000114         01  WS-LIST-STATUS            PIC XX.
+000115         01  WS-EOF                    PIC XX VALUE 'N'.
+000116
+000117         PROCEDURE DIVISION.
+000118         100-MAIN-MODULE.
+000119             PERFORM 200-OPEN-FILES
+000120
+000121             PERFORM 300-PRINT-REPORT-RTN
+000122
+000123             PERFORM 210-CLOSE-FILES
+000124
+000125             STOP RUN
+000126             .
+000127
+000128         200-OPEN-FILES.
+000129             OPEN INPUT  F-PR-MASTER
+000130                  OUTPUT F-PR-LIST
+000131
+000132
+000133             IF WS-MASTER-STATUS NOT = '00'
+000134                 DISPLAY 'ERROR: Cannot open MASTER file. Status: '
+000135                     WS-MASTER-STATUS
+000136                 PERFORM 210-CLOSE-FILES
+000137                 STOP RUN
+000138             END-IF
+000139
+000140             IF WS-LIST-STATUS NOT = '00'
+000141                 DISPLAY 'ERROR: Cannot open PRLIST file. Status: '
+000142                         WS-LIST-STATUS
+000143                 PERFORM 210-CLOSE-FILES
+000144                 STOP RUN
+000145             END-IF
+000146             .
+000147
+000148         210-CLOSE-FILES.
+000149             CLOSE F-PR-MASTER
+000150                   F-PR-LIST
+000151
+000152             IF WS-MASTER-STATUS NOT = '00'
+000153                 DISPLAY 'WARNING: Error closing PRMASTER file. Status: '
+000154                         WS-MASTER-STATUS
+000155             END-IF
+000156
+GnuCOBOL 3.2.0          chap04a02.cbl        Wed Mar 04 2026 00:09:17  Page 0004
+
+LINE    PG/LN  A...B............................................................
+
+000157             IF WS-LIST-STATUS NOT = '00'
+000158                 DISPLAY 'WARNING: Error closing PRLIST file. Status: '
+000159                         WS-LIST-STATUS
+000160             END-IF
+000161             .
+000162
+000163         300-PRINT-REPORT-RTN.
+000164             PERFORM UNTIL WS-EOF = 'Y'
+000165                 READ F-PR-MASTER
+000166                     AT END
+000167                         MOVE 'Y' TO WS-EOF
+000168                     NOT AT END
+000169                         MOVE SPACES TO REPORT-DETAIL
+000170                         MOVE EMPLOYEE-NO-IN TO EMPLOYEE-NO-OUT
+000171                         MOVE EMPLOYEE-NAME-IN TO EMPLOYEE-NAME-OUT
+000172                         MOVE TERRITORY-IN TO TERRITORY-OUT
+000173                         MOVE OFFICE-NO-IN TO OFFICE-NO-OUT
+000174                         MOVE ANNUAL-SALARY-IN TO ANNUAL-SALARY-OUT
+000175                         MOVE SOCIAL-SECURITY-NO-IN TO
+000176                              SOCIAL-SECURITY-NO-OUT
+000177                         MOVE NO-OF-DEPENDENTS-IN TO NO-OF-DEPENDENTS-OUT
+000178                         MOVE JOB-CLASSIFICATION-IN TO
+000179                              JOB-CLASSIFICATION-OUT
+000180                         WRITE REPORT-DETAIL
+000181                 END-READ
+000182                 IF WS-MASTER-STATUS NOT = '00' AND
+000183                    WS-MASTER-STATUS NOT = '10'
+000184                     DISPLAY 'ERROR reading master file, status='
+000185                              WS-MASTER-STATUS
+000186                     PERFORM 210-CLOSE-FILES
+000187                     STOP RUN
+000188                 END-IF
+000189             END-PERFORM
+000190             .
+GnuCOBOL 3.2.0          chap04a02.cbl        Wed Mar 04 2026 00:09:17  Page 0005
+
+NAME                           DEFINED                REFERENCES
+
+F-PR-MASTER                    66       76      129     149     165    x4
+MASTER-REC                     77     referenced by child
+EMPLOYEE-NO-IN                 78       170                            x1
+EMPLOYEE-NAME-IN               79       171                            x1
+LOCATION-CODE-IN               80     referenced by child
+TERRITORY-IN                   81       172                            x1
+OFFICE-NO-IN                   82       173                            x1
+ANNUAL-SALARY-IN               83       174                            x1
+SOCIAL-SECURITY-NO-IN          84       175                            x1
+NO-OF-DEPENDENTS-IN            85       177                            x1
+JOB-CLASSIFICATION-IN          86       178                            x1
+
+F-PR-LIST                      70       88     *130     150    *180    x4
+REPORT-HEADER-LINE             89     not referenced
+HEADER-TEXT                    90     not referenced
+REPORT-DETAIL                  92      *169     180                    x2
+EMPLOYEE-NO-OUT                94      *170                            x1
+EMPLOYEE-NAME-OUT              96      *171                            x1
+LOCATION-CODE-OUT              98     referenced by parent/child
+TERRITORY-OUT                  99      *172                            x1
+OFFICE-NO-OUT                  101     *173                            x1
+ANNUAL-SALARY-OUT              103     *174                            x1
+SOCIAL-SECURITY-NO-OUT         105     *176                            x1
+NO-OF-DEPENDENTS-OUT           107     *177                            x1
+JOB-CLASSIFICATION-OUT         109     *179                            x1
+
+WS-MASTER-STATUS               113      68      133     135     152     154
+                                        182     183     185            x8
+WS-LIST-STATUS                 114      72      140     142     157     159
+                                                                       x5
+WS-EOF                         115      164    *167                    x2
+
+GnuCOBOL 3.2.0          chap04a02.cbl        Wed Mar 04 2026 00:09:17  Page 0006
+
+LABEL                          DEFINED                REFERENCES
+
+E CHAP04A02                    118
+P 100-MAIN-MODULE              118    not referenced
+P 200-OPEN-FILES               128      119                            x1
+P 210-CLOSE-FILES              148      123     136     143     186    x4
+P 300-PRINT-REPORT-RTN         163      121                            x1
+
+0 warnings in compilation group
+0 errors in compilation group
