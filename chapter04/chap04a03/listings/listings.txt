@@ -1,0 +1,290 @@
+GnuCOBOL 3.2.0          chap04a03.cbl        Fri Mar 13 2026 21:38:48  Page 0001
+
+LINE    PG/LN  A...B............................................................
+
+000001         IDENTIFICATION DIVISION.
+000002         PROGRAM-ID.  CHAP04A03.
+000003
+000004        *****************************************************************
+000005        * PROGRAM NAME : LIGHT-EM UP                                    *
+000006        * PROGRAM ID   : CHAP04A03                                      *
+000007        *                                                               *
+000008        * AUTHOR       : Manuel A. Martinez                             *
+000009        * DATE WRITTEN : 2026-03-04                                     *
+000010        * DATE COMPILED:                                                *
+000011        *                                                               *
+000012        * INSTALLATION : Manuel Martinez Development Lab                *
+000013        * ENVIRONMENT  : Linux ARM64 GnuCOBOL 3.2                       *
+000014        *                                                               *
+000015        * PROGRAM TYPE : Batch                                          *
+000016        *                                                               *
+000017        *===============================================================*
+000018        *                                                               *
+000019        * DESCRIPTION :                                                 *
+000020        *   THE LIGHT-EM UP UTILITY COMPANY HAS MASTER DISK RECORDS,    *
+000021        *   EACH OF WHICH WILL BE USED TO CREATE AN ELECTRIC BILL       *
+000022        *   RECORD TO BE STORED ON AN ELEC-BILL-FILE AND A GAS BILL     *
+000023        *   RECORD TO BE STORED ON A GAS-BILL-FILE. NOTE THAT FOR EACH  *
+000024        *   INPUT RECORD, THE PROGRAM WILL CREATE TWO DISK RECORDS, ONE *
+000025        *   ON THE ELEC-BILL-FILE AND ONE ON THE GAS-BILL-FILE.         *
+000026        *                                                               *
+000027        *===============================================================*
+000028        *                                                               *
+000029        * BUSINESS PURPOSE :                                            *
+000030        *   Educational                                                 *
+000031        *                                                               *
+000032        *===============================================================*
+000033        *                                                               *
+000034        * INPUT FILES :                                                 *
+000035        *   ---------------------- ------------------------------------ *
+000036        *   | File Name           | Description                       | *
+000037        *   ---------------------- ------------------------------------ *
+000038        *   | account-master.dat  | Customer master data              | *
+000039        *   ---------------------- -----------------------------------| *
+000040        *                                                               *
+000041        * OUTPUT FILES :                                                *
+000042        *   ---------------------- ------------------------------------ *
+000043        *   | File Name           | Description                       | *
+000044        *   ---------------------- ------------------------------------ *
+000045        *   | elec-bill-file.dat  | Electric bill data                | *
+000046        *   | gas-bill-file.dat   | Gas bill Data                     | *
+000047        *   ---------------------- ------------------------------------ *
+000048        *                                                               *
+000049        *===============================================================*
+000050        *                                                               *
+000051        * ERROR HANDLING :                                              *
+000052        *   - File status validated after every I/O operation           *
+GnuCOBOL 3.2.0          chap04a03.cbl        Fri Mar 13 2026 21:38:48  Page 0002
+
+LINE    PG/LN  A...B............................................................
+
+000053        *   - Program aborts with message on critical errors            *
+000054        *   - Warning messages for non-critical issues                  *
+000055        *                                                               *
+000056        * RETURN CODES :                                                *
+000057        *   - 0 : Normal completion                                     *
+000058        *   - 8 : Error encountered                                     *
+000059        *                                                               *
+000060        *===============================================================*
+000061        *                                                               *
+000062        * SPECIAL NOTES :                                               *
+000063        *   [Any special considerations, dependencies, or notes]        *
+000064        *                                                               *
+000065        *===============================================================*
+000066        *                                                               *
+000067        * REVISION HISTORY :                                            *
+000068        *   2026-03-12  MAM  Initial version                            *
+000069        *   YYYY-MM-DD  MAM  [Description of change]                    *
+000070        *                                                               *
+000071        *****************************************************************
+000072
+000073         ENVIRONMENT DIVISION.
+000074         INPUT-OUTPUT SECTION.
+000075         FILE-CONTROL.
+000076             SELECT F-ACCOUNT-MASTER ASSIGN TO 'data/account-master.dat'
+000077                 ORGANIZATION IS LINE SEQUENTIAL
+000078                 FILE STATUS IS WS-MASTER-STATUS.
+000079
+000080             SELECT F-ELEC-BILL ASSIGN TO 'data/elec-bill.dat'
+000081                 ORGANIZATION IS LINE SEQUENTIAL
+000082                 FILE STATUS IS WS-ELEC-STATUS.
+000083
+000084             SELECT F-GAS-BILL ASSIGN TO 'data/gas-bill.dat'
+000085                 ORGANIZATION IS LINE SEQUENTIAL
+000086                 FILE STATUS IS WS-GAS-STATUS.
+000087
+000088         DATA DIVISION.
+000089         FILE SECTION.
+000090         FD  F-ACCOUNT-MASTER.
+000091         01  MASTER-REC.
+000092             05 ACCOUNT-NO-IN     PIC X(5).
+000093             05 CUSTOMER-NAME-IN  PIC X(20).
+000094             05 ADDRESS-IN        PIC X(20).
+000095             05 KILO-HRS-USED-IN  PIC X(5).
+000096             05 GAS-USED-IN       PIC X(5).
+000097             05 ELEC-BILL-IN      PIC X(5).
+000098             05 GAS-BILL-IN       PIC X(5).
+000099
+000100         FD  F-ELEC-BILL.
+000101         01  ELEC-REC.
+000102             05 EACCOUNT-NO-OUT    PIC X(5).
+000103             05 ECUSTOMER-NAME-OUT PIC X(20).
+000104             05 EADDRESS-OUT       PIC X(20).
+GnuCOBOL 3.2.0          chap04a03.cbl        Fri Mar 13 2026 21:38:48  Page 0003
+
+LINE    PG/LN  A...B............................................................
+
+000105             05 EKILO-HRS-USED-OUT PIC X(5).
+000106             05 EELEC-BILL-OUT     PIC X(5).
+000107
+000108
+000109         FD  F-GAS-BILL.
+000110         01  GAS-REC.
+000111             05 GACCOUNT-NO-OUT    PIC X(5).
+000112             05 GCUSTOMER-NAME-OUT PIC X(20).
+000113             05 GADDRESS-OUT       PIC X(20).
+000114             05 GGAS-USED-OUT      PIC X(5).
+000115             05 GGAS-BILL-OUT      PIC X(5).
+000116
+000117         WORKING-STORAGE SECTION.
+000118         01  WS-MASTER-STATUS     PIC XX.
+000119         01  WS-GAS-STATUS        PIC XX.
+000120         01  WS-ELEC-STATUS       PIC XX.
+000121         01  WS-EOF               PIC X  VALUE 'N'.
+000122
+000123         PROCEDURE DIVISION.
+000124         100-MAIN-MODULE.
+000125             PERFORM 200-OPEN-FILES
+000126
+000127             PERFORM UNTIL WS-EOF = 'Y'
+000128
+000129                READ F-ACCOUNT-MASTER
+000130                   AT END
+000131                      MOVE 'Y' TO WS-EOF
+000132                   NOT AT END
+000133                      PERFORM 310-ELEC-RTN
+000134                      PERFORM 320-GAS-RTN
+000135                END-READ
+000136                IF WS-MASTER-STATUS NOT = '00' AND
+000137                         WS-MASTER-STATUS NOT = '10'
+000138                   DISPLAY 'ERROR reading master file, status='
+000139                         WS-MASTER-STATUS
+000140                   PERFORM 400-CLOSE-FILES
+000141                   STOP RUN
+000142                END-IF
+000143             END-PERFORM
+000144
+000145             PERFORM 400-CLOSE-FILES
+000146             STOP RUN
+000147             .
+000148         200-OPEN-FILES.
+000149             OPEN INPUT  F-ACCOUNT-MASTER
+000150                  OUTPUT F-ELEC-BILL
+000151                  OUTPUT F-GAS-BILL
+000152
+000153             IF WS-MASTER-STATUS NOT = '00'
+000154                 DISPLAY 'ERROR: Cannot open MASTER file. Status: '
+000155                     WS-MASTER-STATUS
+000156                 PERFORM 400-CLOSE-FILES
+GnuCOBOL 3.2.0          chap04a03.cbl        Fri Mar 13 2026 21:38:48  Page 0004
+
+LINE    PG/LN  A...B............................................................
+
+000157                 STOP RUN
+000158             END-IF
+000159
+000160             IF WS-ELEC-STATUS NOT = '00'
+000161                 DISPLAY 'ERROR: Cannot open ELEC-BILL. Status: '
+000162                         WS-ELEC-STATUS
+000163                 PERFORM 400-CLOSE-FILES
+000164                 STOP RUN
+000165             END-IF
+000166
+000167             IF WS-GAS-STATUS NOT = '00'
+000168                 DISPLAY 'ERROR: Cannot open GAS-BILL. Status: '
+000169                         WS-GAS-STATUS
+000170                 PERFORM 400-CLOSE-FILES
+000171                 STOP RUN
+000172             END-IF
+000173             .
+000174
+000175         310-ELEC-RTN.
+000176             MOVE SPACES           TO ELEC-REC
+000177             MOVE ACCOUNT-NO-IN    TO EACCOUNT-NO-OUT
+000178             MOVE CUSTOMER-NAME-IN TO ECUSTOMER-NAME-OUT
+000179             MOVE ADDRESS-IN       TO EADDRESS-OUT
+000180             MOVE KILO-HRS-USED-IN TO EKILO-HRS-USED-OUT
+000181             MOVE ELEC-BILL-IN     TO EELEC-BILL-OUT
+000182             WRITE ELEC-REC
+000183             .
+000184
+000185         320-GAS-RTN.
+000186             MOVE SPACES           TO GAS-REC
+000187             MOVE ACCOUNT-NO-IN    TO GACCOUNT-NO-OUT
+000188             MOVE CUSTOMER-NAME-IN TO GCUSTOMER-NAME-OUT
+000189             MOVE ADDRESS-IN       TO GADDRESS-OUT
+000190             MOVE GAS-USED-IN      TO GGAS-USED-OUT
+000191             MOVE GAS-BILL-IN      TO GGAS-BILL-OUT
+000192             WRITE GAS-REC
+000193             .
+000194
+000195         400-CLOSE-FILES.
+000196             CLOSE F-ACCOUNT-MASTER
+000197                   F-ELEC-BILL
+000198                   F-GAS-BILL
+000199
+000200             IF WS-MASTER-STATUS NOT = '00'
+000201                 DISPLAY 'WARNING: Error closing MASTER file. Status: '
+000202                     WS-MASTER-STATUS
+000203                 STOP RUN
+000204             END-IF
+000205
+000206             IF WS-ELEC-STATUS NOT = '00'
+000207                 DISPLAY 'WARNING: Error closing ELEC-BILL. Status: '
+000208                         WS-ELEC-STATUS
+GnuCOBOL 3.2.0          chap04a03.cbl        Fri Mar 13 2026 21:38:48  Page 0005
+
+LINE    PG/LN  A...B............................................................
+
+000209                 STOP RUN
+000210             END-IF
+000211
+000212             IF WS-GAS-STATUS NOT = '00'
+000213                 DISPLAY 'WARNING: Error closing GAS-BILL. Status: '
+000214                         WS-GAS-STATUS
+000215                 STOP RUN
+000216             END-IF
+000217             .
+000218
+GnuCOBOL 3.2.0          chap04a03.cbl        Fri Mar 13 2026 21:38:48  Page 0006
+
+NAME                           DEFINED                REFERENCES
+
+F-ACCOUNT-MASTER               76       90      129     149     196    x4
+MASTER-REC                     91     referenced by child
+ACCOUNT-NO-IN                  92       177     187                    x2
+CUSTOMER-NAME-IN               93       178     188                    x2
+ADDRESS-IN                     94       179     189                    x2
+KILO-HRS-USED-IN               95       180                            x1
+GAS-USED-IN                    96       190                            x1
+ELEC-BILL-IN                   97       181                            x1
+GAS-BILL-IN                    98       191                            x1
+
+F-ELEC-BILL                    80       100    *150    *182     197    x4
+ELEC-REC                       101     *176     182                    x2
+EACCOUNT-NO-OUT                102     *177                            x1
+ECUSTOMER-NAME-OUT             103     *178                            x1
+EADDRESS-OUT                   104     *179                            x1
+EKILO-HRS-USED-OUT             105     *180                            x1
+EELEC-BILL-OUT                 106     *181                            x1
+
+F-GAS-BILL                     84       109    *151    *192     198    x4
+GAS-REC                        110     *186     192                    x2
+GACCOUNT-NO-OUT                111     *187                            x1
+GCUSTOMER-NAME-OUT             112     *188                            x1
+GADDRESS-OUT                   113     *189                            x1
+GGAS-USED-OUT                  114     *190                            x1
+GGAS-BILL-OUT                  115     *191                            x1
+
+WS-MASTER-STATUS               118      78      136     137     139     153
+                                        155     200     202            x8
+WS-GAS-STATUS                  119      86      167     169     212     214
+                                                                       x5
+WS-ELEC-STATUS                 120      82      160     162     206     208
+                                                                       x5
+WS-EOF                         121      127    *131                    x2
+
+GnuCOBOL 3.2.0          chap04a03.cbl        Fri Mar 13 2026 21:38:48  Page 0007
+
+LABEL                          DEFINED                REFERENCES
+
+E CHAP04A03                    124
+P 100-MAIN-MODULE              124    not referenced
+P 200-OPEN-FILES               148      125                            x1
+P 310-ELEC-RTN                 175      133                            x1
+P 320-GAS-RTN                  185      134                            x1
+P 400-CLOSE-FILES              195      140     145     156     163     170
+                                                                       x5
+
+0 warnings in compilation group
+0 errors in compilation group
