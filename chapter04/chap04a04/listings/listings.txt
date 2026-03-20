@@ -1,0 +1,207 @@
+GnuCOBOL 3.2.0          chap04a04.cbl        Thu Mar 19 2026 20:46:57  Page 0001
+
+LINE    PG/LN  A...B............................................................
+
+000001         IDENTIFICATION DIVISION.
+000002         PROGRAM-ID.  CHAP04A04.
+000003
+000004        *****************************************************************
+000005        * PROGRAM NAME : [Program Name]                                 *
+000006        * PROGRAM ID   : CHAP04A04                                      *
+000007        *                                                               *
+000008        * AUTHOR       : Manuel A. Martinez                             *
+000009        * DATE WRITTEN : 2026-03-18                                     *
+000010        * DATE COMPILED:                                                *
+000011        *                                                               *
+000012        * INSTALLATION : Manuel Martinez Development Lab                *
+000013        * ENVIRONMENT  : Linux ARM64 GnuCOBOL 3.2                       *
+000014        *                                                               *
+000015        * PROGRAM TYPE : Batch                                          *
+000016        *                                                               *
+000017        *===============================================================*
+000018        *                                                               *
+000019        * DESCRIPTION :                                                 *
+000020        *   The Video Trap has one input file containing data on video  *
+000021        * tapes for rent and one input file containing data on video    *
+000022        * tapes for sale. Create a single master file where each record *
+000023        * contains data from each file.                                 *
+000024        *                                                               *
+000025        *   Both files have exactly the same item numbers in the same   *
+000026        * sequence.                                                     *
+000027        *                                                               *
+000028        *===============================================================*
+000029        *                                                               *
+000030        * BUSINESS PURPOSE :                                            *
+000031        *   Educational                                                 *
+000032        *                                                               *
+000033        *===============================================================*
+000034        *                                                               *
+000035        * INPUT FILES :                                                 *
+000036        *   -------------------- -------------------------------------- *
+000037        *   | File Name         | Description                         | *
+000038        *   -------------------- -------------------------------------- *
+000039        *   | rentals.dat       | Video tapes for rent                | *
+000040        *   | sales.dat         | Video tapes for sale                | *
+000041        *   -------------------- -------------------------------------- *
+000042        *                                                               *
+000043        * OUTPUT FILES :                                                *
+000044        *   -------------------- -------------------------------------- *
+000045        *   | File Name         | Description                         | *
+000046        *   -------------------- -------------------------------------- *
+000047        *   | master.dat        | Video tape master file              | *
+000048        *   -------------------- -------------------------------------- *
+000049        *                                                               *
+000050        *===============================================================*
+000051        *                                                               *
+000052        * ERROR HANDLING :                                              *
+GnuCOBOL 3.2.0          chap04a04.cbl        Thu Mar 19 2026 20:46:57  Page 0002
+
+LINE    PG/LN  A...B............................................................
+
+000053        *   - File status validated after every I/O operation           *
+000054        *   - Program aborts with message on critical errors            *
+000055        *   - Warning messages for non-critical issues                  *
+000056        *                                                               *
+000057        * RETURN CODES :                                                *
+000058        *   - 0 : Normal completion                                     *
+000059        *   - 8 : Error encountered                                     *
+000060        *                                                               *
+000061        *===============================================================*
+000062        *                                                               *
+000063        * SPECIAL NOTES :                                               *
+000064        *   [Any special considerations, dependencies, or notes]        *
+000065        *                                                               *
+000066        *===============================================================*
+000067        *                                                               *
+000068        * REVISION HISTORY :                                            *
+000069        *   2026-03-18  MAM  Initial version                            *
+000070        *                                                               *
+000071        *****************************************************************
+000072         ENVIRONMENT DIVISION.
+000073         INPUT-OUTPUT SECTION.
+000074         FILE-CONTROL.
+000075             SELECT RENTALS-FILE ASSIGN TO 'data/rentals.dat'
+000076                 ORGANIZATION IS LINE SEQUENTIAL
+000077                 FILE STATUS  IS WS-RENTAL-STATUS.
+000078
+000079             SELECT SALES-FILE ASSIGN TO 'data/sales.dat'
+000080                 ORGANIZATION IS LINE SEQUENTIAL
+000081                 FILE STATUS  IS WS-SALES-STATUS.
+000082
+000083             SELECT MASTER-FILE ASSIGN TO 'data/master.dat'
+000084                 ORGANIZATION IS LINE SEQUENTIAL
+000085                 FILE STATUS  IS WS-MASTER-STATUS.
+000086
+000087
+000088         DATA DIVISION.
+000089         FILE SECTION.
+000090         FD RENTALS-FILE.
+000091         01  RENTALS-REC.
+000092             05 ITEM-NO-IN    PIC X(3).
+000093             05 VIDEO-NAME-IN PIC X(17).
+000094             05 RENTAL-OH-IN  PIC X(3).
+000095
+000096         FD  SALES-FILE.
+000097         01  SALES-REC.
+000098             05 ITEM-NO-IN    PIC X(3).
+000099             05 VIDEO-NAME-IN PIC X(17).
+000100             05 SALES-OH-IN  PIC X(3).
+000101
+000102         FD MASTER-FILE.
+000103         01  MASTER-REC.
+000104             05 ITEM-NO    PIC X(3).
+GnuCOBOL 3.2.0          chap04a04.cbl        Thu Mar 19 2026 20:46:57  Page 0003
+
+LINE    PG/LN  A...B............................................................
+
+000105             05 VIDEO-NAME PIC X(17).
+000106             05 RENTAL-OH  PIC X(3).
+000107             05 SALES-OH  PIC X(3).
+000108
+000109         WORKING-STORAGE SECTION.
+000110         01  WS-MASTER-STATUS PIC XX.
+000111         01  WS-SALES-STATUS  PIC XX.
+000112         01  WS-RENTAL-STATUS PIC XX.
+000113         01  WS-EOF           PIC X VALUE 'N'.
+000114
+000115         PROCEDURE DIVISION.
+000116         100-MAIN.
+000117             PERFORM 200-OPEN-FILES
+000118
+000119             PERFORM UNTIL WS-EOF = 'Y'
+000120                 READ RENTALS-FILE
+000121                     AT END
+000122                         MOVE 'Y' TO WS-EOF
+000123                     NOT AT END
+000124                         MOVE SPACES TO MASTER-REC
+000125                         MOVE ITEM-NO-IN OF RENTALS-REC TO ITEM-NO
+000126                         MOVE VIDEO-NAME-IN OF RENTALS-REC TO VIDEO-NAME
+000127                         MOVE RENTAL-OH-IN OF RENTALS-REC TO RENTAL-OH
+000128                 END-READ
+000129
+000130                 READ SALES-FILE
+000131                     AT END
+000132                         MOVE 'Y' TO WS-EOF
+000133                     NOT AT END
+000134                         MOVE SALES-OH-IN OF SALES-REC TO SALES-OH
+000135                         WRITE MASTER-REC
+000136                 END-READ
+000137
+000138             END-PERFORM
+000139
+000140             PERFORM 210-CLOSE-FILES
+000141
+000142             STOP RUN
+000143             .
+000144
+000145         200-OPEN-FILES.
+000146             OPEN INPUT  RENTALS-FILE
+000147                  INPUT  SALES-FILE
+000148                  OUTPUT MASTER-FILE
+000149             .
+000150
+000151         210-CLOSE-FILES.
+000152             CLOSE RENTALS-FILE
+000153                   SALES-FILE
+000154                   MASTER-FILE
+000155             .
+000156
+GnuCOBOL 3.2.0          chap04a04.cbl        Thu Mar 19 2026 20:46:57  Page 0004
+
+NAME                           DEFINED                REFERENCES
+
+RENTALS-FILE                   75       90      120     146     152    x4
+RENTALS-REC                    91       125     126                    x2
+ITEM-NO-IN                     92       125                            x1
+VIDEO-NAME-IN                  93       126                            x1
+RENTAL-OH-IN                   94       127                            x1
+
+SALES-FILE                     79       96      130     147     153    x4
+SALES-REC                      97     referenced by child
+ITEM-NO-IN                     98     not referenced
+VIDEO-NAME-IN                  99     not referenced
+SALES-OH-IN                    100      134                            x1
+
+MASTER-FILE                    83       102    *135    *148     154    x4
+MASTER-REC                     103     *124     135                    x2
+ITEM-NO                        104     *125                            x1
+VIDEO-NAME                     105     *126                            x1
+RENTAL-OH                      106     *127                            x1
+SALES-OH                       107     *134                            x1
+
+WS-MASTER-STATUS               110      85                             x1
+WS-SALES-STATUS                111      81                             x1
+WS-RENTAL-STATUS               112      77                             x1
+WS-EOF                         113      119    *122    *132            x3
+
+GnuCOBOL 3.2.0          chap04a04.cbl        Thu Mar 19 2026 20:46:57  Page 0005
+
+LABEL                          DEFINED                REFERENCES
+
+E CHAP04A04                    116
+P 100-MAIN                     116    not referenced
+P 200-OPEN-FILES               145      117                            x1
+P 210-CLOSE-FILES              151      140                            x1
+
+0 warnings in compilation group
+0 errors in compilation group
